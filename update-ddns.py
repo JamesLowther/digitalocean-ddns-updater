@@ -11,35 +11,34 @@ DO_API_URL = "https://api.digitalocean.com/v2"
 
 logging.basicConfig(level=logging.INFO)
 
+
 # User-defined exceptions.
 class NoIPException(Exception):
     pass
 
+
 class NoRecordsException(Exception):
     pass
 
+
 class RecordUpdateException(Exception):
     pass
+
 
 def update_dns(record_id, domain, ip, ttl, token):
     """Updates the DNS record using the DigitalOcean API."""
     url = f"{DO_API_URL}/domains/{domain}/records/{record_id}"
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
-    data = {
-        "type": "A",
-        "data": str(ip),
-        "ttl": str(ttl)
-    }
+    data = {"type": "A", "data": str(ip), "ttl": str(ttl)}
 
     r = requests.put(url, headers=headers, json=data)
 
     if r.status_code == 200:
-        logging.info(f"Record ID {record_id} in {domain} updated to {ip} with a ttl of {ttl}.")
+        logging.info(
+            f"Record ID {record_id} in {domain} updated to {ip} with a TTL of {ttl}."
+        )
     else:
         raise RecordUpdateException(f"Error updating DNS record: {r.text}")
 
@@ -65,6 +64,7 @@ def get_current_dns(record, domain, token):
 
     return (None, None)
 
+
 def get_ip():
     """Return the current public IPv4."""
     r = requests.get(IP_URL)
@@ -77,15 +77,19 @@ def get_ip():
 
     return ip
 
+
 def parse_args():
     """Parse arguments from the CLI."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--token", type=str, default=os.environ.get("DIGITALOCEAN_TOKEN"))
+    parser.add_argument(
+        "-t", "--token", type=str, default=os.environ.get("DIGITALOCEAN_TOKEN")
+    )
     parser.add_argument("--ttl", type=str, default="60")
     parser.add_argument("record", type=str)
     parser.add_argument("domain", type=str)
 
     return parser.parse_args()
+
 
 def main():
     """Main."""
@@ -95,13 +99,16 @@ def main():
     current_ip, record_id = get_current_dns(args.record, args.domain, args.token)
 
     if record_id is None or current_ip is None:
-        logging.error(f"Record {args.record}.{args.domain} does not exist. Please create an initial A record before running this script.")
+        logging.error(
+            f"Record {args.record}.{args.domain} does not exist. Please create an initial A record before running this script."
+        )
         exit(1)
 
     if real_ip != current_ip:
         update_dns(record_id, args.domain, real_ip, args.ttl, args.token)
     else:
         logging.info("Current DNS matches real IP. Skipping update.")
+
 
 if __name__ == "__main__":
     main()
