@@ -6,7 +6,7 @@ import argparse
 
 import requests
 
-IP_URL = "http://ipinfo.io/ip"
+IP_URL = "https://checkip.amazonaws.com/"
 DO_API_URL = "https://api.digitalocean.com/v2"
 
 logging.basicConfig(level=logging.INFO)
