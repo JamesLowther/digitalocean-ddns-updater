@@ -2,9 +2,9 @@
 
 import os
 import logging
+import argparse
 
 import requests
-import argparse
 
 IP_URL = "http://ipinfo.io/ip"
 DO_API_URL = "https://api.digitalocean.com/v2"
