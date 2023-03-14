@@ -15,4 +15,4 @@ options:
   --ttl TTL
 ```
 
-You can also set you DigitalOcean token using `export DIGITALOCEAN_TOKEN=<token>`.
+You can also set your DigitalOcean token using `export DIGITALOCEAN_TOKEN=<token>`.
