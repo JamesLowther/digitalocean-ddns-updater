@@ -98,7 +98,7 @@ def main():
         logging.error(f"Record {args.record}.{args.domain} does not exist. Please create an initial A record before running this script.")
         exit(1)
 
-    if record_id is not None and real_ip != current_ip:
+    if real_ip != current_ip:
         update_dns(record_id, args.domain, real_ip, args.ttl, args.token)
     else:
         logging.info("Current DNS matches real IP. Skipping update.")
