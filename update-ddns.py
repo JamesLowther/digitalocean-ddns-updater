@@ -72,7 +72,7 @@ def get_ip():
     if r.status_code != 200:
         raise NoIPException(f"Error getting DNS records: {r.text}")
 
-    ip = r.text
+    ip = r.text.strip()
     logging.info(f"Real IP is {ip}")
 
     return ip
