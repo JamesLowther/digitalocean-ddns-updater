@@ -3,6 +3,7 @@
 import os
 import logging
 import argparse
+from datetime import datetime
 
 import requests
 
@@ -21,11 +22,15 @@ class NoRecordsException(Exception):
     pass
 
 
+class NoDomainException(Exception):
+    pass
+
+
 class RecordUpdateException(Exception):
     pass
 
 
-def update_dns(record_id, domain, ip, ttl, token):
+def update_dns(record_id, domain, ip, ttl, token, webhook_url=""):
     """Updates the DNS record using the DigitalOcean API."""
     url = f"{DO_API_URL}/domains/{domain}/records/{record_id}"
 
@@ -36,9 +41,13 @@ def update_dns(record_id, domain, ip, ttl, token):
     r = requests.put(url, headers=headers, json=data)
 
     if r.status_code == 200:
-        logging.info(
-            f"Record ID {record_id} in {domain} updated to {ip} with a TTL of {ttl}."
-        )
+        message = f"Record ID {record_id} in {domain} updated to {ip} with a TTL of {ttl}."
+
+        logging.info(message)
+
+        if webhook_url:
+            send_webhook(webhook_url, message, 0x0080ff)
+
     else:
         raise RecordUpdateException(f"Error updating DNS record: {r.text}")
 
@@ -78,11 +87,36 @@ def get_ip():
     return ip
 
 
+def send_webhook(webhook_url, description, colour):
+    data = {
+        "content": ""
+    }
+
+    data["embeds"] = [
+        {
+            "title": "DDNS Alert",
+            "description": description,
+            "color": colour,
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "DDNS"
+            }
+        }
+    ]
+
+    requests.post(webhook_url, json=data)
+
+    logging.info("Webhook sent.")
+
+
 def parse_args():
     """Parse arguments from the CLI."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-t", "--token", type=str, default=os.environ.get("DIGITALOCEAN_TOKEN")
+    )
+    parser.add_argument(
+        "-w", "--webhook-url", type=str, default=os.environ.get("WEBHOOK_URL")
     )
     parser.add_argument("--ttl", type=str, default="60")
     parser.add_argument("record", type=str)
@@ -93,21 +127,32 @@ def parse_args():
 
 def main():
     """Main."""
-    args = parse_args()
 
-    real_ip = get_ip()
-    current_ip, record_id = get_current_dns(args.record, args.domain, args.token)
+    try:
+        args = parse_args()
 
-    if record_id is None or current_ip is None:
-        logging.error(
-            f"Record {args.record}.{args.domain} does not exist. Please create an initial A record before running this script."
-        )
+        real_ip = get_ip()
+        current_ip, record_id = get_current_dns(args.record, args.domain, args.token)
+
+        if record_id is None or current_ip is None:
+            raise NoDomainException(f"Record {args.record}.{args.domain} does not exist. Please create an initial A record before running this script.")
+
+        if real_ip != current_ip:
+            update_dns(record_id, args.domain, real_ip, args.ttl, args.token, webhook_url=args.webhook_url)
+        else:
+            logging.info("Current DNS matches real IP. Skipping update.")
+
+    except Exception as e:
+        logging.error(e)
+
+        if args.webhook_url:
+            send_webhook(
+                args.webhook_url,
+                f"Exception: {e}",
+                0xff0000
+            )
+
         exit(1)
-
-    if real_ip != current_ip:
-        update_dns(record_id, args.domain, real_ip, args.ttl, args.token)
-    else:
-        logging.info("Current DNS matches real IP. Skipping update.")
 
 
 if __name__ == "__main__":
