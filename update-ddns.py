@@ -46,7 +46,7 @@ def update_dns(record_id, domain, ip, ttl, token, webhook_url=""):
         logging.info(message)
 
         if webhook_url:
-            send_webhook(webhook_url, message, 0x0080ff)
+            send_webhook(webhook_url, message)
 
     else:
         raise RecordUpdateException(f"Error updating DNS record: {r.text}")
@@ -87,7 +87,7 @@ def get_ip():
     return ip
 
 
-def send_webhook(webhook_url, description, colour):
+def send_webhook(webhook_url, description, colour=0x0080ff):
     data = {
         "content": ""
     }
@@ -149,7 +149,7 @@ def main():
             send_webhook(
                 args.webhook_url,
                 f"Exception: {e}",
-                0xff0000
+                colour=0xff0000
             )
 
         exit(1)
