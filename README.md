@@ -12,6 +12,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -t TOKEN, --token TOKEN
+  -w WEBHOOK_URL, --webhook-url WEBHOOK_URL
   --ttl TTL
 ```
 
