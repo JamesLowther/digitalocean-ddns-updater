@@ -46,7 +46,9 @@ def update_dns(record_id, domain, ip, ttl, token, webhook_url=""):
         logging.info(message)
 
         if webhook_url:
-            send_webhook(webhook_url, message)
+            md_message = f"Record ID {record_id} in {domain} updated to `{ip}` with a TTL of {ttl}."
+ 
+            send_webhook(webhook_url, md_message)
 
     else:
         raise RecordUpdateException(f"Error updating DNS record: {r.text}")
