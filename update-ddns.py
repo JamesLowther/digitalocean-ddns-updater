@@ -30,7 +30,7 @@ class RecordUpdateException(Exception):
     pass
 
 
-def update_dns(record_id, domain, ip, ttl, token, webhook_url=""):
+def update_dns(record_id, record, domain, ip, ttl, token, webhook_url=""):
     """Updates the DNS record using the DigitalOcean API."""
     url = f"{DO_API_URL}/domains/{domain}/records/{record_id}"
 
@@ -41,12 +41,12 @@ def update_dns(record_id, domain, ip, ttl, token, webhook_url=""):
     r = requests.put(url, headers=headers, json=data)
 
     if r.status_code == 200:
-        message = f"Record ID {record_id} in {domain} updated to {ip} with a TTL of {ttl}."
+        message = f"Record {record}.{domain} updated to {ip} with a TTL of {ttl}."
 
         logging.info(message)
 
         if webhook_url:
-            md_message = f"Record ID {record_id} in {domain} updated to `{ip}` with a TTL of {ttl}."
+            md_message = f"Record **{record}.{domain}** updated to `{ip}` with a TTL of {ttl}."
  
             send_webhook(webhook_url, md_message)
 
@@ -140,7 +140,7 @@ def main():
             raise NoDomainException(f"Record {args.record}.{args.domain} does not exist. Please create an initial A record before running this script.")
 
         if real_ip != current_ip:
-            update_dns(record_id, args.domain, real_ip, args.ttl, args.token, webhook_url=args.webhook_url)
+            update_dns(record_id, args.record, args.domain, real_ip, args.ttl, args.token, webhook_url=args.webhook_url)
         else:
             logging.info("Current DNS matches real IP. Skipping update.")
 
