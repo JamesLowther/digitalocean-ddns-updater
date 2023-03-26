@@ -94,10 +94,12 @@ def send_webhook(webhook_url, description, colour=0x0080ff):
         "content": ""
     }
 
+    role_id = "<@&1013627796112805928>"
+
     data["embeds"] = [
         {
             "title": "DDNS Alert",
-            "description": description,
+            "description": description + f"\n\n{role_id}",
             "color": colour,
             "timestamp": datetime.utcnow().isoformat(),
             "footer": {
